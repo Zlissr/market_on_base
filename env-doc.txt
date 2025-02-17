@@ -1,0 +1,7 @@
+Test enviroment
+--с учётом append, чтобы лог не перетирался
+java -Dtopt_Db_url=jdbc:postgresql://91.230.61.175:5432/topt?currentSchema=topt -Dtopt_Db_user=tlg_user -Dtopt_Db_pass=D45x45eRs7 -D_JAVA_OPTIONS=-Dlogging.level.org.springframework=WARN -jar /data/topt/topt-0.0.1-SNAPSHOT.jar --logging.file=/data/topt/logs/application.log --logging.file.max-size=10MB >> /data/topt/logs/app.log 2>&1 &
+
+http://91.230.61.175:8080
+
+topt_user / t5U4227XrT12 для приложения (select, update, isert, delete)
