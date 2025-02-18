@@ -1,6 +1,7 @@
 package com.rt.market.service;
 
 import com.rt.ExceptInfoUser;
+import com.rt.market.Msg;
 import com.rt.market.dto.OrderDto;
 import com.rt.market.dto.OrderItemDto;
 import com.rt.market.event.OrderCreatedEvent;
@@ -11,8 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,8 +24,26 @@ public class OrderService {
 
     @Transactional
     public void placeOrder(OrderDto order) throws ExceptInfoUser {
-        productService.validateAndUpdateStock(order.getItems());
-        BigDecimal totalPrice = calculateTotalPrice(order.getItems());
+        if (order.getItems().isEmpty()) {
+            throw new ExceptInfoUser(Msg.i().getMessage("Товары не указаны"));
+        }
+
+        Set<Long> ids = new HashSet<>();
+        Map<ProductEntity, Integer> productQuantityMap;
+        Map<Long, Integer> itemQuantityById = new HashMap<>();
+
+        order.getItems().forEach(item -> ids.add(item.getProductId()));
+        List<ProductEntity> productList = productService.findAllById(ids.stream().toList());
+        Set<ProductEntity> productSet = new HashSet<>(productList);
+
+        for (OrderItemDto item : order.getItems()) {
+            itemQuantityById.put(item.getProductId(), item.getQuantity());
+        }
+
+        productQuantityMap = createProductQuantityMap(itemQuantityById, productSet);
+
+        productService.validateAndUpdateStock(productQuantityMap);
+        BigDecimal totalPrice = calculateTotalPrice(productQuantityMap);
 
         eventPublisher.publishEvent(
                 new OrderCreatedEvent(
@@ -34,20 +53,29 @@ public class OrderService {
         );
     }
 
-    private BigDecimal calculateTotalPrice(List<OrderItemDto> items) {
-        List<Long> ids = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
+    private Map<ProductEntity, Integer> createProductQuantityMap(
+            Map<Long, Integer> itemQuantityById,
+            Set<ProductEntity> productSet
+    ) {
+        Map<ProductEntity, Integer> productQuantityMap = new HashMap<>();
 
-        items.forEach(item -> ids.add(item.getProductId()));
-        List<ProductEntity> productEntities = productService.findAllById(ids);
-
-        if (!productEntities.isEmpty()) {
-            return total;
+        for (ProductEntity product : productSet) {
+            Integer quantity = itemQuantityById.get(product.getProductId());
+            productQuantityMap.put(product, quantity);
         }
 
-        for (ProductEntity product : productEntities) {
+        return productQuantityMap;
+    }
+
+    private BigDecimal calculateTotalPrice(Map<ProductEntity, Integer> productQuantityMap) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Map.Entry<ProductEntity, Integer> entry : productQuantityMap.entrySet()) {
+            ProductEntity product = entry.getKey();
+            Integer quantity = entry.getValue();
+
             BigDecimal itemTotal = BigDecimal.valueOf(product.getPrice())
-                    .multiply(BigDecimal.valueOf(product.getQuantity()));
+                    .multiply(BigDecimal.valueOf(quantity));
             total = total.add(itemTotal);
         }
 

@@ -15,9 +15,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,20 +43,23 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
-    public void validateAndUpdateStock(List<OrderItemDto> items) throws ExceptInfoUser {
-        for (OrderItemDto item : items) {
-            ProductEntity product = findById(item.getProductId());
+    public void validateAndUpdateStock(Map<ProductEntity, Integer> productQuantityMap) throws ExceptInfoUser {
+        for (Map.Entry<ProductEntity, Integer> entry : productQuantityMap.entrySet()) {
+            ProductEntity product = entry.getKey();
+            int quantityNeeded = entry.getValue();
 
-            if (product.getQuantity() < item.getQuantity()) {
-                throw new ExceptInfoUser(Msg.i().getMessage("Товара нет в наличии")
-                );
+            if (product.getQuantity() < quantityNeeded) {
+                throw new ExceptInfoUser(Msg.i().getMessage("Товара нет в наличии"));
             }
 
-            product.setQuantity(product.getQuantity() - item.getQuantity());
+            reduceQuantity(product, quantityNeeded);
 
             save(product);
         }
+    }
+
+    private void reduceQuantity(ProductEntity product, int quantity) {
+        product.setQuantity(product.getQuantity() - quantity);
     }
 
     private ProductDto toProductDto(ProductEntity product) {
