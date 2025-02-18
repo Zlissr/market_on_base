@@ -1,5 +1,6 @@
 package com.rt.market.service;
 
+import com.rt.ExceptInfoUser;
 import com.rt.market.dto.OrderDto;
 import com.rt.market.dto.OrderItemDto;
 import com.rt.market.event.OrderCreatedEvent;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,7 +22,7 @@ public class OrderService {
     private final ProductService productService;
 
     @Transactional
-    public void placeOrder(OrderDto order) {
+    public void placeOrder(OrderDto order) throws ExceptInfoUser {
         productService.validateAndUpdateStock(order.getItems());
         BigDecimal totalPrice = calculateTotalPrice(order.getItems());
 
@@ -33,13 +35,20 @@ public class OrderService {
     }
 
     private BigDecimal calculateTotalPrice(List<OrderItemDto> items) {
-        return items.stream()
-                .map(item -> {
-                    ProductEntity product = productService.findById(item.getProductId());
+        List<Long> ids = new ArrayList<>();
+        List<ProductEntity> productEntities = productService.findAllById(ids);;
+        BigDecimal total = BigDecimal.ZERO;
 
-                    return BigDecimal.valueOf(product.getPrice())
-                            .multiply(BigDecimal.valueOf(item.getQuantity()));
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        items.forEach(item -> ids.add(item.getProductId()));
+
+        if (!productEntities.isEmpty()) {
+            for (ProductEntity product : productEntities) {
+                BigDecimal itemTotal = BigDecimal.valueOf(product.getPrice())
+                        .multiply(BigDecimal.valueOf(product.getQuantity()));
+                total = total.add(itemTotal);
+            }
+        }
+
+        return total;
     }
 }

@@ -1,15 +1,18 @@
 package com.rt.market.service;
 
+import com.rt.ExceptInfoUser;
+import com.rt.market.ExceptDb;
+import com.rt.market.Msg;
 import com.rt.market.dto.OrderItemDto;
 import com.rt.market.dto.ProductDto;
 import com.rt.market.dto.ProductParamDto;
-import com.rt.market.except.ExceptQuantity;
-import com.rt.market.except.ExceptResNotFound;
 import com.rt.market.model.ProductEntity;
 import com.rt.market.model.ProductParamEntity;
 import com.rt.market.repository.ProductParamRepository;
 import com.rt.market.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,19 +28,15 @@ public class ProductService {
     private final ProductParamRepository productParamRepository;
 
     public List<ProductDto> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable)
+        return findAll(pageable)
                 .stream()
                 .map(this::toProductDto)
                 .collect(Collectors.toList());
     }
 
-    public List<ProductParamDto> getProductParams(Long productId) {
-        ProductEntity product = productRepository.findById(productId)
-                .orElseThrow(
-                        () -> new ExceptResNotFound("errNotFound01", "Услуга не найдена, id=" + productId)
-                );
-
-        List<ProductParamEntity> paramEntities = productParamRepository.findByProduct(product);
+    public List<ProductParamDto> getProductParams(Long productId) throws ExceptInfoUser {
+        ProductEntity product = findById(productId);
+        List<ProductParamEntity> paramEntities = findByProduct(product);;
 
         return paramEntities.stream()
                 .map(this::toParamDto)
@@ -45,23 +44,18 @@ public class ProductService {
     }
 
     @Transactional
-    public void validateAndUpdateStock(List<OrderItemDto> items) {
+    public void validateAndUpdateStock(List<OrderItemDto> items) throws ExceptInfoUser {
         for (OrderItemDto item : items) {
-            ProductEntity product = productRepository.findById(item.getProductId())
-                    .orElseThrow(
-                            () -> new ExceptResNotFound(
-                            "errNotFound01", "Услуга не найдена, id=" + item.getProductId()
-                            )
-                    );
+            ProductEntity product = findById(item.getProductId());
 
             if (product.getQuantity() < item.getQuantity()) {
-                throw new ExceptQuantity(
-                        "errQuantity01", "Нет в наличии товара: " + findById(item.getProductId()).getName()
+                throw new ExceptInfoUser(Msg.i().getMessage("Товара нет в наличии")
                 );
             }
 
             product.setQuantity(product.getQuantity() - item.getQuantity());
-            productRepository.save(product);
+
+            save(product);
         }
     }
 
@@ -83,10 +77,46 @@ public class ProductService {
         );
     }
 
-    public ProductEntity findById(Long productId) {
-        return productRepository.findById(productId)
-                .orElseThrow(
-                        () -> new ExceptResNotFound("errNotFound01", "Услуга не найдена, id=" + productId)
-                );
+    public ProductEntity findById(Long productId) throws ExceptInfoUser {
+        try {
+            return productRepository.findById(productId)
+                    .orElseThrow(
+                            () -> new ExceptInfoUser(Msg.i().getMessage("Услуга не найдена"))
+                    );
+        } catch (DataAccessException ex) {
+            throw new ExceptDb("errDb04", ex.getMessage(), ex);
+        }
+    }
+
+    public List<ProductEntity> findAllById(List<Long> productIds) {
+        try {
+            return productRepository.findAllById(productIds);
+        } catch (DataAccessException ex) {
+            throw new ExceptDb("errDb05", ex.getMessage(), ex);
+        }
+    }
+
+    public void save(ProductEntity product) {
+        try {
+            productRepository.save(product);
+        } catch (DataAccessException ex) {
+            throw new ExceptDb("errDb06", ex.getMessage(), ex);
+        }
+    }
+
+    public Page<ProductEntity> findAll(Pageable pageable) {
+        try {
+            return productRepository.findAll(pageable);
+        } catch (DataAccessException ex) {
+            throw new ExceptDb("errDb07", ex.getMessage(), ex);
+        }
+    }
+
+    public List<ProductParamEntity> findByProduct(ProductEntity product) {
+        try {
+            return productParamRepository.findByProduct(product);
+        } catch (DataAccessException ex) {
+            throw new ExceptDb("errDb08", ex.getMessage(), ex);
+        }
     }
 }

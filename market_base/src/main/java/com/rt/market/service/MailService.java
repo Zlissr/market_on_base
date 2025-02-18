@@ -30,16 +30,26 @@ public class MailService {
     public void sendEmailToClient(String clientEmail, String subject, String body) {
         try {
             sendEmail(clientEmail, subject, body);
-        } catch (MessagingException e) {
-            throw new Except4Support("ErrMail01", "Ошибка отправки email-сообщения.", e.getMessage());
+        } catch (MessagingException ex) {
+            throw new Except4Support(
+                    "ErrMail01",
+                    "Ошибка отправки email-сообщения к " + clientEmail,
+                    ex.getMessage(),
+                    ex
+            );
         }
     }
 
     public void sendEmailToAdmin(String subject, String body) {
         try {
             sendEmail(adminMail, subject, body);
-        } catch (MessagingException e) {
-            throw new Except4Support("ErrMail01", "Ошибка отправки email-сообщения.", e.getMessage());
+        } catch (MessagingException ex) {
+            throw new Except4Support(
+                    "ErrMail02",
+                    "Ошибка отправки email-сообщения к " + adminMail,
+                    ex.getMessage(),
+                    ex
+            );
         }
     }
 

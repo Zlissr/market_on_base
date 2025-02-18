@@ -1,5 +1,6 @@
 package com.rt.market.event;
 
+import com.rt.ExceptInfoUser;
 import com.rt.market.dto.OrderDto;
 import com.rt.market.dto.OrderItemDto;
 import com.rt.market.model.ProductEntity;
@@ -12,18 +13,17 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class MailEventListener {
+public class OrderEventListener {
 
     private final MailService mailService;
     private final ProductService productService;
 
     @Async
     @EventListener
-    public void handleOrderCreatedEvent(OrderCreatedEvent event) {
+    public void handleOrderCreatedEvent(OrderCreatedEvent event) throws ExceptInfoUser {
         OrderDto orderDto = event.getOrderDto();
         BigDecimal totalPrice = event.getTotalPrice();
         String clientBody = generateClientEmailBody(orderDto, totalPrice);
@@ -34,10 +34,15 @@ public class MailEventListener {
     }
 
 
-    private String generateClientEmailBody(OrderDto order, BigDecimal totalPrice) {
-        String itemList = order.getItems().stream()
-                .map(this::formatOrderItem)
-                .collect(Collectors.joining());
+    private String generateClientEmailBody(OrderDto order, BigDecimal totalPrice) throws ExceptInfoUser {
+        StringBuilder itemListBuilder = new StringBuilder();
+
+        for (OrderItemDto item : order.getItems()) {
+            String formattedItem = formatOrderItem(item);
+            itemListBuilder.append(formattedItem);
+        }
+
+        String itemList = itemListBuilder.toString();
 
         return String.format(
                 "<h2>Спасибо за ваш заказ, %s!</h2>" +
@@ -51,10 +56,15 @@ public class MailEventListener {
         );
     }
 
-    private String generateAdminEmailBody(OrderDto order, BigDecimal totalPrice) {
-        String itemList = order.getItems().stream()
-                .map(this::formatOrderItem)
-                .collect(Collectors.joining());
+    private String generateAdminEmailBody(OrderDto order, BigDecimal totalPrice) throws ExceptInfoUser {
+        StringBuilder itemListBuilder = new StringBuilder();
+
+        for (OrderItemDto item : order.getItems()) {
+            String formattedItem = formatOrderItem(item);
+            itemListBuilder.append(formattedItem);
+        }
+
+        String itemList = itemListBuilder.toString();
 
         return String.format(
                 "<h2>Поступил новый заказ</h2>" +
@@ -71,8 +81,9 @@ public class MailEventListener {
         );
     }
 
-    private String formatOrderItem(OrderItemDto item) {
+    private String formatOrderItem(OrderItemDto item) throws ExceptInfoUser {
         ProductEntity product = productService.findById(item.getProductId());
+
         return String.format(
                 "<li>%s — %d шт. по %s руб.</li>",
                 product.getName(),

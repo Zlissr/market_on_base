@@ -8,15 +8,10 @@ import com.rt.Except;
 import com.rt.Except4Support;
 import com.rt.Except4SupportDocumented;
 import com.rt.config.js.ExceptConf;
-import com.rt.config.monitor.MonitorErrorsService;
-import com.rt.config.monitor.ServiceSecurityRequest;
+import com.rt.market.ExceptDb;
 import com.rt.market.controller.api.response.ErrorResponse;
-import com.rt.market.except.ExceptQuantity;
-import com.rt.market.except.ExceptResNotFound;
-import com.rt.market.service.ActionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.InvalidPropertyException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,14 +37,8 @@ public class HandlerExcept {
     /*
     actionService.closeActionWithError(actionId); - пока закомментировано , ищем решение
     */
-    @Autowired
-    private ActionService actionService;
 
     private final static Logger logger = Logger.getLogger(HandlerExcept.class.getName());
-    @Autowired
-    private ServiceSecurityRequest serviceSecurityRequest;
-    @Autowired
-    private MonitorErrorsService monitorErrorsService;
 
     public HandlerExcept() {
     }
@@ -62,7 +51,6 @@ public class HandlerExcept {
         xRes.addObject(Contr.PARAMETER_ERROR_MESSAGE, ex.getMessage4User());
         xRes.addObject(Contr.PARAMETER_URL, req.getRequestURL());
 
-        actionService.closeActionWithError(Contr.getActionIdFromReq(req));
         return xRes;
     }
 
@@ -74,14 +62,12 @@ public class HandlerExcept {
         xRes.addObject(Contr.PARAMETER_ERROR_MESSAGE, message);
         xRes.addObject(Contr.PARAMETER_URL, req.getRequestURL());
 
-        actionService.closeActionWithError(Contr.getActionIdFromReq(req));
         return xRes;
     }
 
     @ExceptionHandler({ExceptConf.class})
     public void onFatal(HttpServletRequest req, ExceptConf ex) {
         logger.severe("[--FATAL--] " + "[Configuration Exception" + "] " + ex.getMessage4Support());
-        monitorErrorsService.addError(ex.getMessage4Monitor());
         System.exit(-1);
     }
 
@@ -97,7 +83,6 @@ public class HandlerExcept {
                 ex.getMessage4Support());
         logger.severe(message);
 
-        monitorErrorsService.addError(ex.getMessage4Monitor());
         return newModelAndView(req, ex);
     }
 
@@ -113,36 +98,7 @@ public class HandlerExcept {
                 ex.getMessage4Support());
         logger.severe(message);
 
-        monitorErrorsService.addError(ex.getMessage4Monitor());
         return newModelAndView(req, ex);
-    }
-
-    @ExceptionHandler(ExceptQuantity.class)
-    public ModelAndView onExceptQuantity(HttpServletRequest req, Except ex) {
-        Long actionId = Contr.getActionIdFromReq(req);
-        RemoteClientDto kRemote = new RemoteClientDto(req);
-
-        String message = String.format("[ExceptQuantity in %s]. IP: %s, actionId: %s, message: %s",
-                req.getRequestURI(),
-                kRemote.getClientIp(),
-                (actionId != null) ? actionId.toString() : "N/A",
-                ex.getMessage());
-
-        return newModelAndView(req, ex.getMessage4User());
-    }
-
-    @ExceptionHandler(ExceptResNotFound.class)
-    public ModelAndView onExceptNotFound(HttpServletRequest req, Except ex) {
-        Long actionId = Contr.getActionIdFromReq(req);
-        RemoteClientDto kRemote = new RemoteClientDto(req);
-
-        String message = String.format("[ExceptResNotFound in %s]. IP: %s, actionId: %s, message: %s",
-                req.getRequestURI(),
-                kRemote.getClientIp(),
-                (actionId != null) ? actionId.toString() : "N/A",
-                ex.getMessage());
-
-        return newModelAndView(req, ex.getMessage4User());
     }
 
     @ExceptionHandler({ExceptAccess.class})
@@ -205,7 +161,6 @@ public class HandlerExcept {
                 (actionId != null) ? actionId.toString() : "N/A",
                 ex.getMessage());
 
-        actionService.closeActionWithError(actionId);
 
         Except4SupportDocumented kEx = new Except4SupportDocumented("ErrUnk4", message, ex);
         ModelAndView xRes = onExceptProgramist(req, kEx);
@@ -240,19 +195,25 @@ public class HandlerExcept {
                 (actionId != null) ? actionId.toString() : "N/A",
                 ex.getMessage());
 
-        boolean isError = serviceSecurityRequest.isNeedError();
-        actionService.closeActionWithError(actionId);
-
-        if (isError) {
-            logger.log(Level.SEVERE, message);
-            monitorErrorsService.addError("Блокировка подозрительных запросов");
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(new ErrorResponse(ex.getMessage()));
-        }
 
         ErrorResponse response = new ErrorResponse(ex.getMessage());
         logger.log(Level.WARNING, message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler({ExceptDb.class})
+    public ModelAndView onExceptDb(HttpServletRequest req, ExceptDb ex) {
+        Long actionId = Contr.getActionIdFromReq(req);
+        RemoteClientDto kRemote = new RemoteClientDto(req);
 
+        String message = String.format("[Exception in %s]. IP: %s, actionId: %s, message: %s",
+                req.getRequestURI(),
+                kRemote.getClientIp(),
+                (actionId != null) ? actionId.toString() : "N/A",
+                ex.getMessage4Support());
+
+        logger.severe(message);
+
+        return newModelAndView(req, ex.getMessage());
+    }
 }

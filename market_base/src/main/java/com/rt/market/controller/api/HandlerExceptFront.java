@@ -3,15 +3,11 @@ package com.rt.market.controller.api;
 import com.rt.Except4Support;
 import com.rt.Except4SupportDocumented;
 import com.rt.ExceptInfoUser;
-import com.rt.config.monitor.MonitorErrorsService;
-import com.rt.config.monitor.ServiceSecurityRequest;
 import com.rt.market.controller.*;
 import com.rt.market.controller.api.response.ErrorResponse;
-import com.rt.market.service.ActionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.InvalidPropertyException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,13 +27,7 @@ import java.util.logging.Logger;
 
 @RestControllerAdvice
 public class HandlerExceptFront {
-
-    @Autowired
-    private MonitorErrorsService monitorErrorsService;
-    @Autowired
-    private ServiceSecurityRequest serviceSecurityRequest;
-    @Autowired
-    private ActionService actionService;
+    
 
     private final static Logger logger = Logger.getLogger(HandlerExceptFront.class.getName());
 
@@ -54,8 +44,8 @@ public class HandlerExceptFront {
         logger.severe(message);
 
         ErrorResponse errorResponse = new ErrorResponse(ex);
-        actionService.closeActionWithError(actionId);
-        monitorErrorsService.addError(ex.getMessage4Monitor());
+        
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
@@ -72,8 +62,8 @@ public class HandlerExceptFront {
         logger.severe(message);
 
         ErrorResponse errorResponse = new ErrorResponse(ex.getMessage());
-        actionService.closeActionWithError(actionId);
-        monitorErrorsService.addError(ex.getMessage4Monitor());
+        
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
@@ -90,7 +80,7 @@ public class HandlerExceptFront {
         logger.severe(message);
 
         ErrorResponse errorResponse = new ErrorResponse(new ExceptInfoUser(message));
-        actionService.closeActionWithError(actionId);
+        
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
 
@@ -109,14 +99,14 @@ public class HandlerExceptFront {
         Except4SupportDocumented kEx = new Except4SupportDocumented("ErrFrontHandler_02", message, ex);
         ResponseEntity<ErrorResponse> response = handleSupportDocumentedException(req, kEx);
 
-        actionService.closeActionWithError(Contr.getActionIdFromReq(req));
+        
         return response;
     }
 
     @ExceptionHandler({HttpRequestMethodNotSupportedException.class})
     public ResponseEntity<ErrorResponse> handleUnsupportedMethodException(HttpServletRequest req, HttpRequestMethodNotSupportedException ex) {
         ErrorResponse response = new ErrorResponse(new ExceptInfoUser(ex.getMessage()));
-        actionService.closeActionWithError(Contr.getActionIdFromReq(req));
+        
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
@@ -131,14 +121,8 @@ public class HandlerExceptFront {
                 (actionId != null) ? actionId.toString() : "N/A",
                 ex.getMessage());
 
-        actionService.closeActionWithError(actionId);
+        
 
-        boolean isError = serviceSecurityRequest.isNeedError();
-        if (isError) {
-            logger.log(Level.SEVERE, message);
-            monitorErrorsService.addError("Blocking a suspicious request");
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(new ErrorResponse(new ExceptInfoUser(ex.getMessage())));
-        }
 
         ErrorResponse response = new ErrorResponse(new ExceptInfoUser(ex.getMessage()));
         logger.log(Level.WARNING, message);
@@ -147,7 +131,7 @@ public class HandlerExceptFront {
 
     @ExceptionHandler(ExceptSessionExpired.class)
     public ResponseEntity<?> handleSessionExpiredException(HttpServletRequest req, Authentication authentication, ExceptSessionExpired e) {
-        actionService.closeActionWithError(Contr.getActionIdFromReq(req));
+        
         if (authentication != null && authentication.isAuthenticated()) {
             return ResponseEntity.ok().build();
         } else {
@@ -162,7 +146,7 @@ public class HandlerExceptFront {
         ex.getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
         ExceptInfoUser exceptInfoUser = new ExceptInfoUser(errors);
-        actionService.closeActionWithError(Contr.getActionIdFromReq(req));
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(exceptInfoUser));
     }
     @ExceptionHandler(ConstraintViolationException.class)
@@ -170,7 +154,7 @@ public class HandlerExceptFront {
         Map<String, String> errors = new HashMap<>();
         ex.getConstraintViolations().forEach(error -> errors.put(error.getPropertyPath().toString(), error.getMessage()));
         ExceptInfoUser exceptInfoUser = new ExceptInfoUser(errors);
-        actionService.closeActionWithError(Contr.getActionIdFromReq(req));
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(exceptInfoUser));
     }
 
@@ -180,14 +164,14 @@ public class HandlerExceptFront {
         ex.getBindingResult().getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
         ExceptInfoUser exceptInfoUser = new ExceptInfoUser(errors);
-        actionService.closeActionWithError(Contr.getActionIdFromReq(req));
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(exceptInfoUser));
     }
 
     @ExceptionHandler(NumberFormatException.class)
     public ResponseEntity<ErrorResponse> handleNumberFormatException(HttpServletRequest req, NumberFormatException ex) {
         ExceptInfoUser e = new ExceptInfoUser(ex.getMessage());
-        actionService.closeActionWithError(Contr.getActionIdFromReq(req));
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e));
     }
 
@@ -205,8 +189,8 @@ public class HandlerExceptFront {
         logger.severe(message);
 
         ErrorResponse errorResponse = new ErrorResponse(kEx); //todo дописать метод: вызвал getMessage
-        actionService.closeActionWithError(actionId);
-        monitorErrorsService.addError(kEx.getMessage4Monitor());
+        
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
@@ -214,7 +198,7 @@ public class HandlerExceptFront {
     public ResponseEntity<ErrorResponse> handleIllegalException(HttpServletRequest req,IllegalArgumentException ex) {
         ExceptInfoUser exceptInfoUser = new ExceptInfoUser(ex.getMessage());
 
-        actionService.closeActionWithError(Contr.getActionIdFromReq(req));
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(exceptInfoUser));
     }
 }

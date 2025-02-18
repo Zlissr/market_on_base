@@ -1,12 +1,17 @@
 package com.rt.market.controller;
 
+import com.rt.ExceptInfoUser;
+import com.rt.market.controller.api.response.ErrorResponse;
 import com.rt.market.dto.ProductDto;
 import com.rt.market.dto.ProductParamDto;
 import com.rt.market.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -27,8 +32,14 @@ public class ProductController {
     }
 
     @GetMapping("/{productId}/params")
-    public ResponseEntity<List<ProductParamDto>> getProductParams(@PathVariable Long productId) {
-        List<ProductParamDto> params = productService.getProductParams(productId);
+    public ResponseEntity<?> getProductParams(@PathVariable Long productId) {
+        List<ProductParamDto> params;
+
+        try {
+            params = productService.getProductParams(productId);
+        } catch (ExceptInfoUser ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
 
         return ResponseEntity.ok(params);
     }

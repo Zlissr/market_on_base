@@ -1,15 +1,12 @@
 package com.rt.market.controller.api;
 
 import com.rt.*;
-import com.rt.config.monitor.ServiceSecurityRequest;
 import com.rt.market.Msg;
 import com.rt.market.controller.*;
-import com.rt.config.monitor.MonitorErrorsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.InvalidPropertyException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.http.HttpStatus;
@@ -36,11 +33,7 @@ import java.util.stream.Collectors;
  */
 @RestControllerAdvice(annotations = RestController.class)
 public class HandlerExceptApi {
-
-    @Autowired
-    private MonitorErrorsService monitorErrorsService;
-    @Autowired
-    private ServiceSecurityRequest serviceSecurityRequest;
+    
 
     private final static Logger logger = Logger.getLogger(HandlerExceptApi.class.getName());
 
@@ -55,8 +48,7 @@ public class HandlerExceptApi {
                 (actionId != null) ? actionId.toString() : "N/A",
                 ex.getMessage4Support());
         logger.severe(message);
-
-        monitorErrorsService.addError(ex.getMessage4Monitor());
+        
 
         ApiResponseDto response = new ApiResponseDto(
                 ApiResponseDto.STATUS_ERROR,
@@ -97,7 +89,6 @@ public class HandlerExceptApi {
 
         Except4SupportDocumented except4Support = new Except4SupportDocumented("ErrApiHandler_08", message, ex);
         logger.severe(except4Support.getMessage4Support());
-        monitorErrorsService.addError(except4Support.getMessage4Monitor());
 
         ApiResponseDto response = new ApiResponseDto(
                 ApiResponseDto.STATUS_ERROR,
@@ -138,17 +129,7 @@ public class HandlerExceptApi {
                 (actionId != null) ? actionId.toString() : "N/A",
                 ex.getMessage());
 
-        boolean isError = serviceSecurityRequest.isNeedError();
         Except4SupportDocumented except4Support = new Except4SupportDocumented("ErrApiHandler_06", message);
-        if (isError) {
-            logger.log(Level.SEVERE, except4Support.getMessage4Support());
-            monitorErrorsService.addError(except4Support.getMessage4Monitor());
-            ApiResponseDto response = new ApiResponseDto(
-                    ApiResponseDto.STATUS_ERROR,
-                    new ErrorDetailsDto(except4Support.getCodeId(), except4Support.getErrorCode(), Except4Support.ENG_INTERNAL_ERROR)
-            );
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(response);
-        }
 
         logger.log(Level.WARNING, except4Support.getMessage4Support());
         ApiResponseDto response = new ApiResponseDto(
@@ -174,7 +155,7 @@ public class HandlerExceptApi {
 
             Except4SupportDocumented except4Support = new Except4SupportDocumented("ErrApiHandler_05", message);
             logger.log(Level.WARNING, except4Support.getMessage4Support());
-            monitorErrorsService.addError(except4Support.getMessage4Monitor());
+            
 
             ApiResponseDto response = new ApiResponseDto(
                     ApiResponseDto.STATUS_ERROR,
@@ -202,7 +183,7 @@ public class HandlerExceptApi {
 
         Except4SupportDocumented except4Support = new Except4SupportDocumented("ErrApiHandler_04", message);
         logger.severe(except4Support.getMessage4Support());
-        monitorErrorsService.addError(except4Support.getMessage4Monitor());
+        
 
         ApiResponseDto response = new ApiResponseDto(
                 ApiResponseDto.STATUS_ERROR,
@@ -235,7 +216,7 @@ public class HandlerExceptApi {
 
         Except4Support except4Support = new Except4Support("ErrApiHandler_010", sb.toString(), msg4Support); // todo не ошибка для саппорта
         logger.severe(except4Support.getMessage4Support());
-        monitorErrorsService.addError(except4Support.getMessage4Monitor());
+        
 
         ApiResponseDto response = new ApiResponseDto(
                 ApiResponseDto.STATUS_ERROR,
@@ -266,7 +247,7 @@ public class HandlerExceptApi {
         }
         Except4SupportDocumented except4Support = new Except4SupportDocumented("ErrApiHandler_03", sb.toString(), msg4Support);
         logger.severe(except4Support.getMessage4Support());
-        monitorErrorsService.addError(except4Support.getMessage4Monitor());
+        
 
         ApiResponseDto response = new ApiResponseDto(
                 ApiResponseDto.STATUS_ERROR,
@@ -289,7 +270,7 @@ public class HandlerExceptApi {
 
         Except4SupportDocumented except4Support = new Except4SupportDocumented("ErrApiHandler_02", message);
         logger.severe(except4Support.getMessage4Support());
-        monitorErrorsService.addError(except4Support.getMessage4Monitor());
+        
 
         ApiResponseDto response = new ApiResponseDto(
                 ApiResponseDto.STATUS_ERROR,
@@ -312,7 +293,7 @@ public class HandlerExceptApi {
 
         Except4SupportDocumented except4Support = new Except4SupportDocumented("ErrApiHandler_01",message);
         logger.severe(except4Support.getMessage4Support());
-        monitorErrorsService.addError(except4Support.getMessage4Monitor());
+        
 
         ApiResponseDto response = new ApiResponseDto(
                 ApiResponseDto.STATUS_ERROR,

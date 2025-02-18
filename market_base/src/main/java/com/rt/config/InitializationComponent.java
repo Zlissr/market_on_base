@@ -5,7 +5,6 @@
 package com.rt.config;
 
 
-import com.rt.config.monitor.MonitorErrorsService;
 import com.rt.config.sequence.ServiceIdGenPostgre;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +18,9 @@ import org.springframework.stereotype.Component;
 public class InitializationComponent {
 
     private final ServiceIdGenPostgre serviceId;
-    private final MonitorErrorsService serviceHealth;
-
     @Autowired
-    public InitializationComponent(ServiceIdGenPostgre serviceId, MonitorErrorsService serviceHealth) {
+    public InitializationComponent(ServiceIdGenPostgre serviceId) {
         this.serviceId = serviceId;
-        this.serviceHealth = serviceHealth;
     }
 
     @PostConstruct

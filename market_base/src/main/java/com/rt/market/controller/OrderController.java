@@ -1,8 +1,10 @@
 package com.rt.market.controller;
 
+import com.rt.ExceptInfoUser;
 import com.rt.market.dto.OrderDto;
 import com.rt.market.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +20,11 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<String> placeOrder(@RequestBody OrderDto order) {
-        orderService.placeOrder(order);
+        try {
+            orderService.placeOrder(order);
+        } catch (ExceptInfoUser ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        }
 
         return ResponseEntity.ok("Заказ успешно оформлен!");
     }
