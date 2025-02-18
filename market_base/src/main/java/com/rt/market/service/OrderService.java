@@ -36,10 +36,10 @@ public class OrderService {
 
     private BigDecimal calculateTotalPrice(List<OrderItemDto> items) {
         List<Long> ids = new ArrayList<>();
-        List<ProductEntity> productEntities = productService.findAllById(ids);;
         BigDecimal total = BigDecimal.ZERO;
 
         items.forEach(item -> ids.add(item.getProductId()));
+        List<ProductEntity> productEntities = productService.findAllById(ids);
 
         if (!productEntities.isEmpty()) {
             for (ProductEntity product : productEntities) {

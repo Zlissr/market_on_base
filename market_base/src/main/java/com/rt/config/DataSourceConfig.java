@@ -15,7 +15,7 @@ public class DataSourceConfig {
         updateUsingConfig();
     }
 
-    public void updateUsingConfig() {
+        public void updateUsingConfig() {
         HikariConfigMXBean config = ds.getHikariConfigMXBean();
         HikariPoolMXBean pool = ds.getHikariPoolMXBean();
         int newPool = ConfJsMarket.getInstance().getApp().getHikariPoolMaxSize();
