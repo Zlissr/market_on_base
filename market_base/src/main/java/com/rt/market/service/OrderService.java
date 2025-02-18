@@ -42,11 +42,13 @@ public class OrderService {
         List<ProductEntity> productEntities = productService.findAllById(ids);
 
         if (!productEntities.isEmpty()) {
-            for (ProductEntity product : productEntities) {
-                BigDecimal itemTotal = BigDecimal.valueOf(product.getPrice())
-                        .multiply(BigDecimal.valueOf(product.getQuantity()));
-                total = total.add(itemTotal);
-            }
+            return total;
+        }
+
+        for (ProductEntity product : productEntities) {
+            BigDecimal itemTotal = BigDecimal.valueOf(product.getPrice())
+                    .multiply(BigDecimal.valueOf(product.getQuantity()));
+            total = total.add(itemTotal);
         }
 
         return total;
