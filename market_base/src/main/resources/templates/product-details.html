@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Детали товара</title>
+</head>
+<body>
+<h2 th:text="'Товар: ' + ${product.name}"></h2>
+<p><b>Цена:</b> <span th:text="${product.price}"></span></p>
+<p><b>Остаток:</b> <span th:text="${product.quantity}"></span></p>
+
+<h3>Параметры товара</h3>
+<table>
+    <thead>
+    <tr>
+        <th>Наименование</th>
+        <th>Значение</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="paramItem : ${params}">
+        <td th:text="${paramItem.label}"></td>
+        <td th:text="${paramItem.value}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<a href="/shop/products">Вернуться к списку товаров</a>
+</body>
+</html>

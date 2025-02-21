@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Оформление заказа</title>
+</head>
+<body>
+<h1>Оформление заказа</h1>
+
+<div th:if="${errorMessage}" style="color: red;">
+    <p th:text="${errorMessage}"></p>
+</div>
+
+<form th:action="@{/shop/order}" th:object="${orderDto}" method="post">
+    <div>
+        <label>Имя клиента:</label>
+        <input type="text" th:field="*{clientName}" />
+        <div th:if="${#fields.hasErrors('clientName')}" style="color: red;">
+            <p th:errors="*{clientName}"></p>
+        </div>
+    </div>
+    <div>
+        <label>Email клиента:</label>
+        <input type="email" th:field="*{clientEmail}" />
+        <div th:if="${#fields.hasErrors('clientEmail')}" style="color: red;">
+            <p th:errors="*{clientEmail}"></p>
+        </div>
+    </div>
+    <div>
+        <label>Адрес доставки:</label>
+        <input type="text" th:field="*{deliveryAddress}" />
+        <div th:if="${#fields.hasErrors('deliveryAddress')}" style="color: red;">
+            <p th:errors="*{deliveryAddress}"></p>
+        </div>
+    </div>
+
+    <h3>Товары в заказе:</h3>
+    <div th:each="item, iterStat : *{items}">
+        <div>
+            <label>Товар:</label>
+
+            <input type="text" th:field="*{items[__${iterStat.index}__].productName}" readonly="readonly" />
+
+            <input type="hidden" th:field="*{items[__${iterStat.index}__].productId}" />
+        </div>
+        <div>
+            <label>Количество:</label>
+            <input type="number" th:field="*{items[__${iterStat.index}__].quantity}" min="1" required />
+            <div th:if="${#fields.hasErrors('items[' + iterStat.index + '].quantity')}" style="color: red;">
+                <p th:errors="*{items[__${iterStat.index}__].quantity}"></p>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit">Оформить заказ</button>
+</form>
+
+</body>
+</html>

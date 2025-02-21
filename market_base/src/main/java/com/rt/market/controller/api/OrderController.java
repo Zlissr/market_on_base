@@ -1,4 +1,4 @@
-package com.rt.market.controller;
+package com.rt.market.controller.api;
 
 import com.rt.ExceptInfoUser;
 import com.rt.market.dto.OrderDto;

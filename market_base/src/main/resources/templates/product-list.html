@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Список товаров</title>
+</head>
+<body>
+
+<h1>Список товаров</h1>
+
+<form th:action="@{/shop/order-form}" method="get">
+    <table border="1">
+        <thead>
+        <tr>
+            <th>Название</th>
+            <th>Цена</th>
+            <th>Остаток</th>
+            <th></th>
+            <th>Выбрать</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="prod : ${products}">
+            <td th:text="${prod.name}">Product Name</td>
+            <td th:text="${prod.price}">0.0</td>
+            <td th:text="${prod.quantity}">0</td>
+            <td>
+                <a th:href="@{/shop/products/{id}(id=${prod.id})}">
+                    Подробнее
+                </a>
+            </td>
+            <td>
+                <input type="checkbox" name="productIds" th:value="${prod.id}" />
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <br/>
+    <button type="submit">Добавить выбранные товары в заказ</button>
+</form>
+
+</body>
+</html>

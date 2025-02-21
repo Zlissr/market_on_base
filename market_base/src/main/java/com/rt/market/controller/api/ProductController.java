@@ -1,7 +1,6 @@
-package com.rt.market.controller;
+package com.rt.market.controller.api;
 
 import com.rt.ExceptInfoUser;
-import com.rt.market.controller.api.response.ErrorResponse;
 import com.rt.market.dto.ProductDto;
 import com.rt.market.dto.ProductParamDto;
 import com.rt.market.service.ProductService;
@@ -11,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController

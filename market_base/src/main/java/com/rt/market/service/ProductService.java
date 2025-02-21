@@ -49,7 +49,7 @@ public class ProductService {
             int quantityNeeded = entry.getValue();
 
             if (product.getQuantity() < quantityNeeded) {
-                throw new ExceptInfoUser(Msg.i().getMessage("Товара нет в наличии"));
+                throw new ExceptInfoUser(Msg.i().getMessage("Товара " + product.getName() + " нет в наличии"));
             }
 
             reduceQuantity(product, quantityNeeded);
