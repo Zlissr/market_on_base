@@ -22,7 +22,7 @@ public class OrderService {
     private final ApplicationEventPublisher eventPublisher;
     private final ProductService productService;
 
-    @Transactional
+    @Transactional(rollbackFor = ExceptInfoUser.class)
     public void placeOrder(OrderDto order) throws ExceptInfoUser {
         if (order.getItems().isEmpty()) {
             throw new ExceptInfoUser(Msg.i().getMessage("Товары не указаны"));
