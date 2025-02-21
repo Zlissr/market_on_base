@@ -47,6 +47,7 @@ public class OrderViewController {
         productIdNameMap.forEach((id, name) ->
             orderDto.getItems().add(new OrderItemDto(id, name, 1))
         );
+
         model.addAttribute("orderDto", orderDto);
 
         return "order-form";
@@ -62,9 +63,11 @@ public class OrderViewController {
         }
         try {
             orderService.placeOrder(orderDto);
+
             return "order-success";
         } catch (ExceptInfoUser ex) {
             model.addAttribute("errorMessage", ex.getMessage());
+
             return "order-form";
         }
     }
